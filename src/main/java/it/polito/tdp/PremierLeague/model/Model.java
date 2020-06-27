@@ -34,13 +34,13 @@ public class Model {
 		graph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 		idMap = new HashMap<Integer, Player>();
 		
-		dao.getVertici(x, idMap);
+		dao.getVertici(x, idMap); //Viene riempita la idMap
 		Graphs.addAllVertices(graph, idMap.values());
 		
 		for(Adiacenza adj : dao.getAdiacenze(idMap)) {
 			if(graph.containsVertex(adj.getP1()) && graph.containsVertex(adj.getP2())) {
 				if(adj.getPeso() < 0) {
-					//arco da p2 a p1
+					//arco da p2 a p1, faccio poi *-1 cosi' da avere l'arco con peso positivo
 					Graphs.addEdgeWithVertices(graph, adj.getP2(), adj.getP1(), ((double) -1)*adj.getPeso());
 				} else if(adj.getPeso() > 0){
 					//arco da p1 a p2
@@ -68,6 +68,8 @@ public class Model {
 		if(graph == null)
 			return null;
 		
+		//Uso outDegreeOf perché significa che quel giocatore ha battuto l'altro in termini di minuti.. colui che ha
+		//più archi uscenti dal vertice sarà il top player
 		Player best = null;
 		Integer maxDegree = Integer.MIN_VALUE;
 		for(Player p : graph.vertexSet()) {
@@ -77,9 +79,11 @@ public class Model {
 			}
 		}
 		
+		//Potrei direttamente metterlo nel costruttore
 		TopPlayer topPlayer = new TopPlayer();
 		topPlayer.setPlayer(best);
 		
+		//Creato oggetto opponents dove ho giocatore e peso dell'arco per ordinare la lista come richiesto
 		List<Opponent> opponents = new ArrayList<>();
 		for(DefaultWeightedEdge edge : graph.outgoingEdgesOf(topPlayer.getPlayer())) {
 			opponents.add(new Opponent(graph.getEdgeTarget(edge), (int) graph.getEdgeWeight(edge)));
@@ -95,6 +99,7 @@ public class Model {
 		this.dreamTeam = new ArrayList<Player>();
 		List<Player> partial = new ArrayList<Player>();
 		
+		//Gli passo la lista parziale, la lista con tutti i Player del grafo e k
 		this.recursive(partial, new ArrayList<Player>(this.graph.vertexSet()), k);
 
 		return dreamTeam;
